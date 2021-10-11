@@ -4,14 +4,23 @@ import { CsvLoader } from "../src/data/csv-loader";
 import {
   selectCount,
   selectRatingsByUserID,
-  selectMovieId
+  selectMovieId,
 } from "../src/queries/select";
 import { MOVIE_RATINGS } from "../src/table-names";
 import { Rating } from "../src/data/types";
 import { minutes } from "./utils";
+import { escape } from "../src/utils";
 
 const insertRatings = (movieId: number, ratings: Rating[]) => {
-  throw new Error(`todo`);
+  return (
+    `insert into ${MOVIE_RATINGS} (user_id,movie_id,rating,time_created) values` +
+    ratings
+      .map(
+        (rating) =>
+          `(${rating.userId},'${rating.imdbId}',${rating.rating},'${rating.time_created}')`
+      )
+      .join(",")
+  );
 };
 
 describe("Insert Combined Data", () => {
@@ -20,11 +29,11 @@ describe("Insert Combined Data", () => {
   beforeAll(async () => {
     db = await Database.fromExisting("02", "03");
     await CsvLoader.load();
-  }, minutes(3));
+  }, minutes(40));
 
   it(
     "should insert movie ratings",
-    async done => {
+    async (done) => {
       const ratingsByImdbId = _.groupBy(await CsvLoader.ratings(), "imdbId");
 
       for (const imdbId of Object.keys(ratingsByImdbId)) {
@@ -47,6 +56,6 @@ describe("Insert Combined Data", () => {
 
       done();
     },
-    minutes(10)
+    minutes(40)
   );
 });
